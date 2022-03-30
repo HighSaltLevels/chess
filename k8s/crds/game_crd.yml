@@ -1,0 +1,61 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: chess-games.chess.greeson.xyz
+spec:
+  group: chess.greeson.xyz
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                id:
+                  type: string
+                whitePlayerName:
+                  type: string
+                blackPlayerName:
+                  type: string
+                gameType:
+                  type: string
+                fen:
+                  type: object
+                  properties:
+                    pos:
+                      type: string
+                      description: The board position in the fen string
+                      example: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+                    turn:
+                      type: string
+                      description: Who's turn it is (b or w)
+                      enum: ["w", "b"]
+                    castle:
+                      type: string
+                      description: The right for black and white to castle
+                      enum: ["KQkq", "KQk", "KQq", "Kkq", "KQ", "Kk", "Kq", "K", "Qkq", "Qk", "Qq", "Q", "kq", "k", "q", "-"]
+                    enPassant:
+                      type: string
+                      description: The position of the pawn, if any, that is a valid en passant target
+                      enum: ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "-"]
+                    halfmove:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      description: The halfmove counter
+                    fullmove:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      description: The fullmove counter
+  scope: Namespaced
+  names:
+    plural: chess-games
+    singular: chess-game
+    kind: ChessGame
+    shortNames:
+    - cg

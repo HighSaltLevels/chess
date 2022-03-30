@@ -1,0 +1,21 @@
+FROM python:3.10.4-bullseye as builder
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tmux=3.1c-1+deb11u1 \
+        stockfish=12-2 \
+	bsdmainutils=12.1.7+nmu3 && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/games/stockfish /usr/bin/stockfish && \
+    python3 -m pip install -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
+
+WORKDIR /opt
+USER 1234:5678
+
+COPY --chown=1234:5678 run.sh /opt/run.sh
+COPY --chown=1234:5678 backend /opt/backend
+
+ENTRYPOINT /opt/run.sh

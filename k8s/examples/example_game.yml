@@ -1,0 +1,10 @@
+apiVersion: "chess.greeson.xyz/v1"
+kind: ChessGame
+metadata:
+  name: test
+spec:
+  id: 1
+  whitePlayerName: foo
+  blackPlayerName: bar
+  gameType: PvP
+  history: ""
