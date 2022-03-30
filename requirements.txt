@@ -1,0 +1,4 @@
+connexion[swagger-ui]==2.13.0
+gevent==20.12.1
+gunicorn==20.1.0
+kubernetes==23.3.0

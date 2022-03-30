@@ -1,0 +1,246 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Chess Game Server
+basePath: /api/v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /health:
+    get:
+      summary: Perform a health check
+      operationId: controllers.health.check
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service is up and healthy
+          schema:
+            $ref: '#/definitions/Message'
+        "500":
+          description: Service is not healthy
+          schema:
+            $ref: '#/definitions/Message'
+  /deepHealth:
+    get:
+      summary: Perform a deep health check of dependent services
+      operationId: controllers.health.deep_check
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service and dependent services are healthy
+          schema:
+            $ref: '#/definitions/Message'
+        "500":
+          description: Service or one of its dependent services are unhealthy
+          schema:
+            $ref: '#/definitions/Message'
+  /games:
+    get:
+      summary: List all games
+      operationId: controllers.game.list_games
+      tags:
+        - games
+      responses:
+        "200":
+          description: A paged array of games
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Games'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Create a new Game
+      operationId: controllers.game.create_game
+      tags:
+        - games
+      parameters:
+        - name: chess_game
+          in: body
+          description: The parameters that make up a new Chess Game
+          schema:
+            $ref: '#/definitions/GameRequest'
+      responses:
+        "201":
+          description: successfully created
+          schema:
+            $ref: '#/definitions/Message'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /games/{game_id}:
+    get:
+      summary: Info for a specific game
+      operationId: controllers.game.get_game_by_id
+      tags:
+        - games
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: The id of the game to retrieve
+          type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Game'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: Delete an existing Game
+      operationId: controllers.game.delete_game
+      tags:
+        - games
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: The id of the game to retrieve
+          type: string
+      responses:
+        "200":
+          description: The game is deleted successfully
+          schema:
+            $ref: '#/definitions/Message'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /games/{game_id}/move:
+    put:
+      summary: Make a move
+      operationId: controllers.game.make_move
+      tags:
+        - games
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: The id of the game to retrieve
+          type: string
+        - name: fen
+          in: body
+          required: true
+          description: The FEN string of the current game
+          schema:
+            $ref: '#/definitions/Fen'
+      responses:
+        "200":
+          description: The move is legal and is played
+          schema:
+            $ref: '#/definitions/Message'
+        "400":
+          description: The move is illegal
+          schema:
+            $ref: '#/definitions/Message'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  GameRequest:
+    type: "object"
+    required:
+      - whitePlayerName
+      - blackPlayerName
+      - gameType
+    properties:
+      whitePlayerName:
+        type: string
+        description: The name of the player with white pieces
+      blackPlayerName:
+        type: string
+        description: The name of the player with white pieces
+      gameType:
+        type: string
+        enum: ["PvP", "PvC", "CvP"]
+        description: The type of game (P=Player, C=Computer)
+  Game:
+    type: "object"
+    required:
+      - id
+      - whitePlayerName
+      - blackPlayerName
+      - gameType
+    properties:
+      id:
+        type: string
+        description: The ID of the game
+      whitePlayerName:
+        type: string
+        description: The name of the player with white pieces
+      blackPlayerName:
+        type: string
+        description: The name of the player with white pieces
+      gameType:
+        type: string
+        enum: ["PvP", "PvC", "CvP"]
+        description: The type of game (P=Player, C=Computer)
+      fen:
+        description: The FEN string of the current game
+        $ref: '#/definitions/Fen'
+  Fen:
+    type: object
+    properties:
+      pos:
+        type: string
+        description: The board position in the fen string
+        example: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+      turn:
+        type: string
+        description: Who's turn it is (b or w)
+        enum: ["b", "w"]
+      castle:
+        type: string
+        description: The right for black and white to castle
+        enum: ["KQkq", "KQk", "KQq", "Kkq", "KQ", "Kk", "Kq", "K", "Qkq", "Qk", "Qq", "Q", "kq", "k", "q", "-"]
+      enPassant:
+        type: string
+        description: The position of the pawn, if any, that is a valid en passant target
+        enum: ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "-"]
+      halfmove:
+        type: integer
+        format: int32
+        minimum: 0
+        description: The halfmove counter
+      fullmove:
+        type: integer
+        format: int32
+        minimum: 0
+        description: The fullmove counter
+  Games:
+    type: array
+    items:
+      $ref: '#/definitions/Game'
+  Message:
+    type: "object"
+    required:
+      - msg
+    properties:
+      msg:
+        type: string
+  Error:
+    type: "object"
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
